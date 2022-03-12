@@ -6,10 +6,9 @@ import com.app.ecommere.model.OrderDTO;
 import com.app.ecommere.payload.response.OrderResponse;
 import com.app.ecommere.repository.*;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,48 +22,53 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
 
-    public OrderResponse createOrder(Integer productId, Integer userId) {
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
+    public OrderResponse createOrder(Integer userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        Cart cart = cartRepository.findByProductAndUser(product, user);
-
-
+        List<Cart> carts = cartRepository.findAll();
         Orders newOrders = new Orders();
         newOrders.setStatus(1);
         newOrders.setUser(user);
         orderRepository.save(newOrders);
 
-        OrderDetail orderDetail = OrderDetail.builder()
-                .total(product.getPrice() * cart.getQuantity())
-                .price(product.getPrice())
-                .quantity(cart.getQuantity())
-                .orders(newOrders)
-                .product(product)
-                .build();
+        List<OrderDTO> body = new ArrayList<>();
+        float total = 0;
 
-        orderDetailRepository.save(orderDetail);
-        cartRepository.removeCart(product.getId(), user.getId());
+        for (Cart tmp : carts) {
+            OrderDetail orderDetail = OrderDetail.builder()
+                    .total(tmp.getProduct().getPrice() * tmp.getQuantity())
+                    .price(tmp.getProduct().getPrice())
+                    .quantity(tmp.getQuantity())
+                    .orders(newOrders)
+                    .product(tmp.getProduct())
+                    .build();
+            body.add(this.mapToDTO(orderDetail));
+            orderDetailRepository.save(orderDetail);
+        }
+        cartRepository.clearCart(user.getId());
+        for (OrderDTO temp : body) {
+            total += temp.getPrice() * temp.getQuantity();
+        }
+
         OrderResponse orderResponse = new OrderResponse();
-        orderResponse.setProducts(Arrays.asList(mapToDTO(orderDetail)));
-        orderResponse.setTotal(orderDetail.getTotal());
+        orderResponse.setProducts(body);
+        orderResponse.setTotal(total);
 
         return orderResponse;
     }
 
 
-    public OrderResponse getAllOrderByUserId(Integer userId){
+    public OrderResponse getAllOrderByUserId(Integer userId) {
         List<OrderDetail> orderDetails = orderDetailRepository.findByOrdersUserId(userId);
 
         List<OrderDTO> orderDTOS = orderDetails.stream().map(this::mapToDTO).collect(Collectors.toList());
 
         OrderResponse orderResponse = new OrderResponse();
-        float total = 0 ;
-        for( OrderDTO temp :orderDTOS){
-             total += temp.getPrice()* temp.getQuantity();
+        float total = 0;
+        for (OrderDTO temp : orderDTOS) {
+            total += temp.getPrice() * temp.getQuantity();
         }
         orderResponse.setProducts(orderDTOS);
         orderResponse.setTotal(total);
