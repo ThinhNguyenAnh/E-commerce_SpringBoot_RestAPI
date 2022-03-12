@@ -16,20 +16,15 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping("api/order/{productID}")
-    public OrderResponse createOrder(@PathVariable(name = "productID") Integer productId,
-                                     @AuthenticationPrincipal CustomUserDetail customUserDetail) {
+    @PostMapping("api/order")
+    public OrderResponse createOrder(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
 
-        OrderResponse order = orderService.createOrder(productId, customUserDetail.getUserID());
-
-        return order;
+        return orderService.createOrder(customUserDetail.getUserID());
     }
 
     @GetMapping("api/order")
     public OrderResponse getOrder(@AuthenticationPrincipal CustomUserDetail customUserDetail) {
 
-        OrderResponse order = orderService.getAllOrderByUserId(customUserDetail.getUserID());
-
-        return order;
+        return orderService.getAllOrderByUserId(customUserDetail.getUserID());
     }
 }
