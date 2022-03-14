@@ -9,5 +9,4 @@ public class OrderDTO {
     private String productName;
     private int quantity;
     private float price;
-    private Date date;
 }
