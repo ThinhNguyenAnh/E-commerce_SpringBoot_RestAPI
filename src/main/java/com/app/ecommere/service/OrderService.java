@@ -45,6 +45,11 @@ public class OrderService {
                     .product(tmp.getProduct())
                     .build();
             body.add(this.mapToDTO(orderDetail));
+
+            Product updatedProduct = orderDetail.getProduct();
+            updatedProduct.setCount_buy(orderDetail.getQuantity());
+            productRepository.save(updatedProduct);
+
             orderDetailRepository.save(orderDetail);
         }
         cartRepository.clearCart(user.getId());
