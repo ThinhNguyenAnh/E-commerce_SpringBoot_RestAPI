@@ -47,7 +47,7 @@ public class OrderService {
             body.add(this.mapToDTO(orderDetail));
 
             Product updatedProduct = orderDetail.getProduct();
-            updatedProduct.setCount_buy(orderDetail.getQuantity());
+            updatedProduct.setCount_buy(updatedProduct.getCount_buy() + orderDetail.getQuantity());
             productRepository.save(updatedProduct);
 
             orderDetailRepository.save(orderDetail);
@@ -60,7 +60,7 @@ public class OrderService {
         OrderResponse orderResponse = new OrderResponse();
         orderResponse.setProducts(body);
         orderResponse.setTotal(total);
-
+        orderResponse.setDate(newOrders.getCreateTime());
         return orderResponse;
     }
 
@@ -86,7 +86,6 @@ public class OrderService {
         orderDTO.setProductName(order.getProduct().getName());
         orderDTO.setPrice(order.getPrice());
         orderDTO.setQuantity(order.getQuantity());
-        orderDTO.setDate(order.getOrders().getCreateTime());
 
         return orderDTO;
     }
